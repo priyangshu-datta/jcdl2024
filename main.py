@@ -43,7 +43,7 @@ def extract_datasets_process():
                     [re.sub(rf"\({m}\)", "", dataset).strip() for m in match],
                 )
             else:
-                py_.union(refined_datasets, [dataset])
+                refined_datasets = py_.union(refined_datasets, [dataset])
 
         end = time()
 
