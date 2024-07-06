@@ -20,18 +20,17 @@ class Color:
 
 def annotate_pdf(pdf_path: Path, datasets: list[str]):
     doc: pypdf.Document = pypdf.open(pdf_path)
+    dataset_objects = [
+        {
+            "dataset": dataset,
+            "color": (random(), random(), 0),
+            "rects": pypdf.utils.search_for(page, f" {dataset} "),
+        }
+        for dataset in datasets
+    ]
 
     for pi in range(doc.page_count):
         page = doc.load_page(pi)
-
-        dataset_objects = [
-            {
-                "dataset": dataset,
-                "color": (random(), random(), 0),
-                "rects": pypdf.utils.search_for(page, f" {dataset} "),
-            }
-            for dataset in datasets
-        ]
 
         for obj in dataset_objects:
             for rect in obj["rects"]:
