@@ -1,0 +1,5 @@
+cache
+.env*
+scratch*
+data
+**/__pycache__
