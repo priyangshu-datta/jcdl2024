@@ -1,5 +1,5 @@
 pandas
-numpy<=2.0.0
+numpy<2.0.0
 nltk
 
 sentence_transformers 
