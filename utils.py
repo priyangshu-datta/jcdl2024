@@ -49,7 +49,26 @@ def xml2text(path: Path):
     if paper.body == None:
         return ""
 
-    for tag in paper.body.select("ref, figure, note"):
-        tag.decompose()
+    abstract = "" if paper.abstract == None else paper.abstract
+    body = "" if paper.body == None else paper.body
 
-    return paper.body.get_text("\n", True)
+    if paper.body == None and paper.abstract == None:
+        return ""
+
+    if paper.abstract != None:
+        for tag in paper.abstract.select("ref, figure, note"):
+            tag.decompose()
+        abstract = paper.abstract.get_text("\n", True)
+    else:
+        abstract = ""
+
+    if paper.body != None:
+        for tag in paper.body.select("ref, figure, note"):
+            tag.decompose()
+        body = paper.body.get_text("\n", True)
+    else:
+        body = ""
+
+    return abstract + " " + body
+
+    # if paper.body != None and paper.abstract != None:
