@@ -57,7 +57,8 @@ def group_sentences(sentences: list[str], max_tokens=100, overlap=1):
 
 
 def prepare_passages(full_text: str, keywords: set[str], regex: bool):
-    sentences = group_sentences(sentence_splitter(full_text), 200, 2)
+    # sentences = group_sentences(sentence_splitter(full_text), 200, 2)
+    sentences = sentence_splitter(full_text)
 
     reduced_sentence_space = reduce_sentence_space(sentences, keywords, regex)
 
@@ -69,20 +70,20 @@ def prepare_passages(full_text: str, keywords: set[str], regex: bool):
     doc_hits = semantic_search(query_embeds, sentence_embeds)  # type: ignore
     reduced_relevant_sentences = resolve_hit_documents(reduced_sentence_space, doc_hits)
 
-    passages = reduced_relevant_sentences
+    # passages = reduced_relevant_sentences
 
-    # passages: list[str] = []
-    # for sentence in reduced_relevant_sentences:
-    #     j = sentences.index(sentence)
-    #     i = 0
-    #     passage = ""
-    #     while len(passage.split(" ")) < 200 and len(passage) < 1200 and i < j:
-    #         passage = " ".join(
-    #             sentences[max(0, j - i) : min(len(sentences), j + i + 1)]
-    #         )
-    #         i += 1
+    passages: list[str] = []
+    for sentence in reduced_relevant_sentences:
+        j = sentences.index(sentence)
+        i = 0
+        passage = ""
+        while len(passage.split(" ")) < 200 and len(passage) < 1200 and i < j:
+            passage = " ".join(
+                sentences[max(0, j - i) : min(len(sentences), j + i + 1)]
+            )
+            i += 1
 
-    #     if len(passage) > 1:
-    #         passages.append(passage)
+        if len(passage) > 1:
+            passages.append(passage)
 
     return passages

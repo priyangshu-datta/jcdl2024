@@ -25,12 +25,16 @@ def xml2title(path: Path):
 
 
 def pdf2xml(grobid_client: GrobidClient, input_path: Path, output_path: Path):
-    grobid_client.process(
-        "processFulltextDocument",
-        input_path=input_path,
-        output=output_path,
-        consolidate_header=False,
-    )
+
+    if len(list(input_path.glob("*.pdf"))) != len(
+        list(output_path.glob("*.grobid.tei.xml"))
+    ):
+        grobid_client.process(
+            "processFulltextDocument",
+            input_path=input_path,
+            output=output_path,
+            consolidate_header=False,
+        )
 
     return [
         {"id": path.name.replace(".grobid.tei.xml", ""), "title": xml2title(path)}

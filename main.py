@@ -1,3 +1,6 @@
+import streamlit as st
+
+
 from pathlib import Path
 from queue import Queue
 from tempfile import TemporaryDirectory
@@ -6,7 +9,6 @@ from time import time
 
 import pandas as pd
 import pydash as py_
-import streamlit as st
 from grobid_client.grobid_client import GrobidClient
 from streamlit.runtime.scriptrunner import add_script_run_ctx
 
@@ -84,7 +86,7 @@ if "new_entry_flag" not in st.session_state:
     st.session_state.new_entry_flag = False
 
 if "tmpdir" not in st.session_state:
-    st.session_state.tmpdir = TemporaryDirectory(dir="cache")
+    st.session_state.tmpdir = TemporaryDirectory(dir="cache", delete=False)
 
 if "disable_extract_btn" not in st.session_state:
     st.session_state.disable_extract_btn = False
@@ -104,52 +106,65 @@ _ = """
 UI elements
 """
 
-input_type = st.selectbox(
-    "Input type",
-    ("PDF", "URL"),
-    disabled=st.session_state.disable_extract_btn,
-    label_visibility="hidden",
+st.warning(
+    "Avoid clicking anything, when at the top-right corner of the app shows ``RUNNING...``"
 )
 
+with st.expander("Step 1: Get the Research Article", expanded=True):
+    examples = st.button("Add examples")
 
-with st.form("file_form"):
-    _ = """
-        change UI element for getting Research Papers
-    """
-    match input_type:
-        case "PDF":
-            upload_label = "Upload Research Papers"
-            st.info(upload_label)
-            upload_pdfs = st.file_uploader(
-                upload_label,
-                accept_multiple_files=True,
-                type="pdf",
-                label_visibility="collapsed",
-            )
-        case "URL":
-            st.info("Download Research Papers")
-            download_pdfs = st.data_editor(
-                pd.DataFrame([{"url": None}]),
-                column_config={
-                    "url": st.column_config.LinkColumn(
-                        label="URL",
-                        width="medium",
-                        validate=r"^https://.+$",
-                        display_text=r"^https://.+?/([^/]+?)$",
-                    )
-                },
-                use_container_width=True,
-                num_rows="dynamic",
-            )["url"].to_list()
-
-            download_pdfs = py_.map_(download_pdfs, lambda pdf: (pdf or "").strip())
-
-    process_btn = st.form_submit_button(
-        "Process Files", disabled=st.session_state.disable_extract_btn
+    st.session_state.download_df = pd.DataFrame(
+        [
+            {"url": "https://arxiv.org/pdf/1705.04304"},
+            {"url": "https://arxiv.org/pdf/1909.07808"},
+        ]
     )
 
-if not process_btn and len(st.session_state.pdfs) < 1:
-    st.stop()
+    input_type = st.selectbox(
+        "Input type",
+        ("PDF", "URL"),
+        disabled=st.session_state.disable_extract_btn,
+        label_visibility="collapsed",
+        index=1 if examples else 0,
+    )
+
+    with st.form("file_form", border=False):
+        _ = """
+            change UI element for getting Research Papers
+        """
+        match input_type:
+            case "PDF":
+                upload_label = "Upload Research Papers"
+                st.info(upload_label)
+                upload_pdfs = st.file_uploader(
+                    upload_label,
+                    accept_multiple_files=True,
+                    type="pdf",
+                    label_visibility="collapsed",
+                )
+            case "URL":
+                st.info("Download Research Papers")
+
+                download_pdfs = st.data_editor(
+                    st.session_state.download_df,
+                    column_config={
+                        "url": st.column_config.LinkColumn(
+                            label="URL",
+                            width="medium",
+                            validate=r"^https://.+$",
+                            display_text=r"^https://.+?/([^/]+?)$",
+                        )
+                    },
+                    use_container_width=True,
+                    num_rows="dynamic",
+                )["url"].to_list()
+
+                download_pdfs = py_.map_(download_pdfs, lambda pdf: (pdf or "").strip())
+
+        st.form_submit_button(
+            "Process Files",
+            disabled=st.session_state.disable_extract_btn,
+        )
 
 if "pdfs" in st.session_state:
     pdfs = py_.union(
@@ -163,7 +178,11 @@ if "pdfs" in st.session_state:
 
     if len(pdfs) != len(st.session_state.pdfs):
         st.session_state.pdfs = pdfs
+        _ = """Add a flag that will enable update in the dataframe view."""
         st.session_state.new_entry_flag = True
+
+if len(st.session_state.pdfs) < 1:
+    st.stop()
 
 Path(st.session_state.tmpdir.name).joinpath("pdf").mkdir(parents=True, exist_ok=True)
 for pdf in st.session_state.pdfs:
@@ -183,7 +202,6 @@ xmls = pdf2xml(
     Path(st.session_state.tmpdir.name).joinpath("pdf"),
     Path(st.session_state.tmpdir.name).joinpath("xml"),
 )
-
 
 if (
     "papers_df" not in st.session_state
@@ -207,29 +225,30 @@ if (
         index=[xml["id"] for xml in xmls],
     )
 
-with st.form("paper_select"):
-    _ = """Use the Dataframe from earlier to show the table."""
-    event = st.dataframe(
-        st.session_state.papers_df,
-        column_config={
-            "title": st.column_config.TextColumn("Title"),
-            "status": st.column_config.TextColumn("Status"),
-            "datasets": st.column_config.ListColumn("Datasets"),
-            "time_elapsed": st.column_config.NumberColumn(
-                "Time Elapsed", format="%.2fs"
-            ),
-            "download_link": st.column_config.LinkColumn(
-                "Download Link", display_text="Download"
-            ),
-        },
-        selection_mode="multi-row",
-        hide_index=True,
-        use_container_width=True,
-        on_select="rerun",
-    )
-    st.session_state.submitted = st.form_submit_button(
-        "Extract datasets", disabled=st.session_state.disable_extract_btn
-    )
+
+with st.expander("Step 2: Extract Datasets"):
+    with st.form("paper_select", border=False):
+        _ = """Use the Dataframe from earlier to show the table."""
+        event = st.dataframe(
+            st.session_state.papers_df,
+            column_config={
+                "title": st.column_config.TextColumn("Title"),
+                "status": st.column_config.TextColumn("🚥"),
+                "datasets": st.column_config.ListColumn("Datasets"),
+                "time_elapsed": st.column_config.NumberColumn("⏳", format="%.2fs"),
+                "download_link": st.column_config.LinkColumn(
+                    "📥",
+                    display_text="Download",
+                ),
+            },
+            selection_mode="multi-row",
+            hide_index=True,
+            use_container_width=True,
+            on_select="rerun",
+        )
+        st.session_state.submitted = st.form_submit_button(
+            "Extract datasets", disabled=st.session_state.disable_extract_btn
+        )
 
 if st.session_state.submitted:
     st.session_state.disable_extract_btn = True
@@ -275,5 +294,5 @@ while True:
     else:
         break
 
-# Remove the temporary directory
+_ = """Remove the temporary directory"""
 st.session_state.tmpdir.cleanup()
