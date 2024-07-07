@@ -22,4 +22,4 @@ grobid-client-python
 beautifulsoup4
 pymupdf
 lxml
-pysqlite3
+pysqlite3-binary
