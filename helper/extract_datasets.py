@@ -13,7 +13,7 @@ from helper.keywords_regexs import (
 from helper.retreive_passages import prepare_passages
 
 
-def extract_datasets(full_text: str):
+def extract_datasets(chromaDB, gsc, full_text: str):
     LLM_TEMPERATURE = 0.06
 
     datasets: set[str] = set()
@@ -25,7 +25,7 @@ def extract_datasets(full_text: str):
     extra_prompt = ""
 
     while True:
-        passages = prepare_passages(full_text, keywords, regex=len(datasets) < 1)
+        passages = prepare_passages(chromaDB, full_text, keywords, regex=len(datasets) < 1)
         if len(passages) < 1:
             return list(datasets)
 
@@ -34,6 +34,7 @@ def extract_datasets(full_text: str):
         llm_answer: list[str] = []
         for _docs in py_.chunk(passages, 10) if len(passages) > 15 else [passages]:
             response = LLM.get_response(
+                gsc,
                 list(_docs),
                 query,
                 LLM_TEMPERATURE,

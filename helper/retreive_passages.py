@@ -3,7 +3,6 @@ import re
 import numpy as np
 import pydash as py_
 from helper.sentence_splitter import sentence_splitter
-from init import chromaDB
 from helper.keywords_regexs import semantic_search_query
 from sentence_transformers.util import semantic_search
 
@@ -56,7 +55,7 @@ def group_sentences(sentences: list[str], max_tokens=100, overlap=1):
     return py_.chain(chunks).map_(lambda x: " ".join(x)).value()
 
 
-def prepare_passages(full_text: str, keywords: set[str], regex: bool):
+def prepare_passages(chromaDB, full_text: str, keywords: set[str], regex: bool):
     # sentences = group_sentences(sentence_splitter(full_text), 200, 2)
     sentences = sentence_splitter(full_text)
 

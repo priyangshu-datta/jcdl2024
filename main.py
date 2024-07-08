@@ -1,6 +1,14 @@
-import streamlit as st
+__import__("pysqlite3")
+import sys
+
+sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
 
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
+import re
 from pathlib import Path
 from queue import Queue
 from tempfile import TemporaryDirectory
@@ -10,13 +18,14 @@ from time import time
 import pandas as pd
 import pydash as py_
 from grobid_client.grobid_client import GrobidClient
-from streamlit.runtime.scriptrunner import add_script_run_ctx
 
+import streamlit as st
 from helper.annotate_pdf import annotate_pdf
 from helper.basics import chcksum
-from utils import download_pdf_helper, extract_datasets, pdf2xml, xml2text
-import re
 from helper.keywords_regexs import inside_bracket_regex
+from streamlit.runtime.scriptrunner import add_script_run_ctx
+from utils import (ChromaPersist, GenerativeServiceClient, download_pdf_helper,
+                   extract_datasets, pdf2xml, xml2text)
 
 st.set_page_config(page_title="exData", page_icon="⛏️", layout="centered")
 
@@ -33,7 +42,7 @@ def extract_datasets_process():
         )
 
         start = time()
-        datasets = extract_datasets(full_text)
+        datasets = extract_datasets(st.session_state.chromaDB, st.session_state.gsc, full_text)
 
         refined_datasets: list[str] = []
         for dataset in datasets or []:
@@ -55,6 +64,11 @@ def extract_datasets_process():
 
         st.session_state.task_list.task_done()
 
+if "chromaDB" not in st.session_state:
+    st.session_state.chromaDB = ChromaPersist(name="embeddings", path=Path("./cache/db"))
+    
+if "gsc" not in st.session_state:
+    st.session_state.gsc = GenerativeServiceClient()
 
 if "task_list" not in st.session_state:
     st.session_state.task_list = Queue()

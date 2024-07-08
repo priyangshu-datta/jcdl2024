@@ -2,9 +2,6 @@ from time import sleep, time
 
 import google.ai.generativelanguage as glm
 
-from init import generative_service_client
-
-
 def prepare_grounding_passages(docs: list[str]):
     contents = [glm.Content(parts=[glm.Part(text=doc)]) for doc in docs]
     passages = [
@@ -20,6 +17,7 @@ def prepare_query_content(user_query: str):
 
 
 def generate_answer(
+    gsc,
     grounding_passages: glm.GroundingPassages,
     query_content: glm.Content,
     temperature: float | None,
@@ -32,7 +30,7 @@ def generate_answer(
         answer_style="EXTRACTIVE",  # or ABSTRACTIVE, EXTRACTIVE, VERBOSE
     )
 
-    return generative_service_client.get().generate_answer(answer_request)
+    return gsc.get().generate_answer(answer_request)
 
 
 class LLM:
@@ -40,6 +38,7 @@ class LLM:
 
     @staticmethod
     def get_response(
+        gsc,
         docs: list[str],
         query: str,
         temperature: None | float,
@@ -52,6 +51,6 @@ class LLM:
             continue
 
         LLM.last_accessed = time()
-        response = generate_answer(grounding_passages, query_content, temperature)
+        response = generate_answer(gsc, grounding_passages, query_content, temperature)
 
         return response
