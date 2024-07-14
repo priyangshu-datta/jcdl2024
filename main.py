@@ -142,7 +142,7 @@ with st.expander("Step 1: Get the Research Article", expanded=True):
         index=1 if examples else 0,
     )
 
-    with st.form("file_form", border=False):
+    with st.form("file_form"):
         _ = """
             change UI element for getting Research Papers
         """
@@ -241,7 +241,7 @@ if (
 
 
 with st.expander("Step 2: Extract Datasets"):
-    with st.form("paper_select", border=False):
+    with st.form("paper_select"):
         _ = """Use the Dataframe from earlier to show the table."""
         event = st.dataframe(
             st.session_state.papers_df,
