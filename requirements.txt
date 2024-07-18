@@ -4,7 +4,7 @@ nltk==3.8.1
 
 sentence-transformers==3.0.1
 
-pydash=8.0.1
+pydash==8.0.1
 
 google-ai-generativelanguage==0.6.7
 google-auth-oauthlib==1.2.1
