@@ -4,11 +4,11 @@ from chromadb import PersistentClient
 from chromadb.utils import embedding_functions
 
 from helper.basics import chcksum
-
+from chromadb.config import Settings
 
 class ChromaPersist:
     def __init__(self, path: Path, name: str):
-        chroma_client = PersistentClient(path=path.as_posix())
+        chroma_client = PersistentClient(path=path.as_posix(), settings=Settings(anonymized_telemetry=False))
         ef = embedding_functions.SentenceTransformerEmbeddingFunction(
             model_name="all-MiniLM-L6-v2",
             cache_folder="./cache/model/sentence_transformer",
