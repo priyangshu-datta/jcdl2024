@@ -100,7 +100,7 @@ if "new_entry_flag" not in st.session_state:
     st.session_state.new_entry_flag = False
 
 if "tmpdir" not in st.session_state:
-    st.session_state.tmpdir = TemporaryDirectory(delete=False)
+    st.session_state.tmpdir = TemporaryDirectory()
 
 if "disable_extract_btn" not in st.session_state:
     st.session_state.disable_extract_btn = False
