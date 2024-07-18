@@ -1,25 +1,25 @@
-pandas
-numpy<2.0.0
-nltk
+pandas==2.2.2
+numpy==1.26.4
+nltk==3.8.1
 
-sentence_transformers 
+sentence-transformers==3.0.1
 
-pydash
+pydash=8.0.1
 
-google.ai.generativelanguage
-google-auth-oauthlib
+google-ai-generativelanguage==0.6.7
+google-auth-oauthlib==1.2.1
 
-python-dotenv
+python-dotenv==1.0.1
 
-chromadb
+chromadb==0.5.4
 
-openpyxl
+openpyxl==3.1.5
 
-loguru
+loguru==0.7.2
 
-streamlit
-grobid-client-python
-beautifulsoup4
-pymupdf
-lxml
-pysqlite3-binary
+streamlit==1.36.0
+grobid-client-python==0.0.8
+beautifulsoup4==4.12.3
+PyMuPDF==1.24.7
+lxml==5.2.2
+pysqlite3-binary==0.5.3
