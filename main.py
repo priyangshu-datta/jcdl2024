@@ -29,7 +29,7 @@ from utils import (ChromaPersist, GenerativeServiceClient, download_pdf_helper,
 
 st.set_page_config(page_title="exData", page_icon="⛏️", layout="centered")
 
-st.title("exData", anchor=False, help="extract Dataset Mentions from research articles")
+st.title("exData", anchor=False, help="This is the prototype of the model presented in the paper: \"RAGing Against the Literature: LLM-Powered Dataset Mention Extraction\" under review at JCDL 2024. Please do not share.")
 
 
 def extract_datasets_process():
@@ -129,8 +129,8 @@ with st.expander("Step 1: Get the Research Article", expanded=True):
 
     st.session_state.download_df = pd.DataFrame(
         [
-            {"url": "https://arxiv.org/pdf/1705.04304"},
-            {"url": "https://arxiv.org/pdf/1909.07808"},
+            {"url": "https://aclanthology.org/P16-1035.pdf"},
+            {"url": "https://arxiv.org/pdf/2304.12730"},
         ]
     )
 
@@ -176,7 +176,7 @@ with st.expander("Step 1: Get the Research Article", expanded=True):
                 download_pdfs = py_.map_(download_pdfs, lambda pdf: (pdf or "").strip())
 
         st.form_submit_button(
-            "Process Files",
+            "Parse PDF",
             disabled=st.session_state.disable_extract_btn,
         )
 
@@ -252,7 +252,8 @@ with st.expander("Step 2: Extract Datasets"):
                 "time_elapsed": st.column_config.NumberColumn("⏳", format="%.2fs"),
                 "download_link": st.column_config.LinkColumn(
                     "📥",
-                    display_text="Download",
+                    display_text="Review",
+                    help="Review the annotated PDF file with the dataset mentions highlighted"
                 ),
             },
             selection_mode="multi-row",
