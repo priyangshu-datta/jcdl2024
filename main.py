@@ -1,4 +1,5 @@
 __import__("pysqlite3")
+import os
 import sys
 
 sys.modules["sqlite3"] = sys.modules.pop("pysqlite3")
@@ -11,7 +12,6 @@ load_dotenv()
 import re
 from pathlib import Path
 from queue import Queue
-from tempfile import TemporaryDirectory
 from threading import Thread
 from time import time
 
@@ -100,7 +100,19 @@ if "new_entry_flag" not in st.session_state:
     st.session_state.new_entry_flag = False
 
 if "tmpdir" not in st.session_state:
-    st.session_state.tmpdir = TemporaryDirectory()
+    Path("tmp").mkdir(exist_ok=True, parents=True)
+
+    if (num_files:=len(list(Path("tmp/pdf").glob("*.pdf")))) > 15:
+        sorted_files = sorted(Path("tmp/pdf").glob("*.pdf"), key=os.path.getmtime)
+        for file in sorted_files[:num_files-15]:
+            file.unlink()
+
+    if (num_files:=len(list(Path("tmp/xml").glob("*.xml")))) > 15:
+        sorted_files = sorted(Path("tmp/xml").glob("*.xml"), key=os.path.getmtime)
+        for file in sorted_files[:num_files-15]:
+            file.unlink()
+
+    st.session_state.tmpdir = Path("tmp")
 
 if "disable_extract_btn" not in st.session_state:
     st.session_state.disable_extract_btn = False
@@ -308,6 +320,3 @@ while True:
         st.rerun()
     else:
         break
-
-_ = """Remove the temporary directory"""
-st.session_state.tmpdir.cleanup()
