@@ -3,3 +3,4 @@ cache
 scratch*
 data
 **/__pycache__
+tmp
