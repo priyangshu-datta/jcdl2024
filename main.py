@@ -76,9 +76,6 @@ if "task_list" not in st.session_state:
 if "done_list" not in st.session_state:
     st.session_state.done_list = Queue()
 
-if "n_tasks" not in st.session_state:
-    st.session_state.n_tasks = 0
-
 if "daemon" not in st.session_state:
     thread = Thread(target=extract_datasets_process, daemon=True)
     add_script_run_ctx(thread)
@@ -114,16 +111,31 @@ if "tmpdir" not in st.session_state:
 
     st.session_state.tmpdir = Path("tmp")
 
-if "disable_extract_btn" not in st.session_state:
-    st.session_state.disable_extract_btn = False
+if "tasks_left" not in st.session_state:
+    st.session_state.tasks_left = 0
+
+if "total_tasks" not in st.session_state:
+    st.session_state.total_tasks = 0
+
+if "tasks_left_prev" not in st.session_state:
+    st.session_state.tasks_left_prev = 0
+
+if "disable_btn" not in st.session_state:
+    st.session_state.disable_btn = False
 
 if "submitted" not in st.session_state:
     st.session_state.submitted = False
 
-if not (st.session_state.task_list.empty() and st.session_state.done_list.empty()):
-    st.session_state.disable_extract_btn = True
+# if not (st.session_state.task_list.empty() and st.session_state.done_list.empty()):
+if st.session_state.tasks_left > 0:
+    print(abs(st.session_state.tasks_left_prev - st.session_state.tasks_left))
+    st.session_state.disable_btn = True
 else:
-    st.session_state.disable_extract_btn = False
+    st.session_state.disable_btn = False
+
+if abs(st.session_state.tasks_left_prev - st.session_state.tasks_left) > 0:
+    st.session_state.tasks_left_prev = st.session_state.tasks_left
+    st.toast(f"Done {st.session_state.total_tasks - st.session_state.tasks_left}/{st.session_state.total_tasks}.")
 
 upload_pdfs = []
 download_pdfs: list[str] = []
@@ -136,61 +148,64 @@ st.warning(
     "Avoid clicking anything, when at the top-right corner of the app shows ``RUNNING...``"
 )
 
-with st.expander("Step 1: Get the Research Article", expanded=True):
-    examples = st.button("Add examples")
+get_papers = st.status("Step 1: Get the Research Article", expanded=False if st.session_state.tasks_left > 0 else True, state="complete")
+examples = get_papers.button("Add examples", disabled=st.session_state.disable_btn)
+if examples:
+    get_papers.update(expanded=False, state="running")
 
-    st.session_state.download_df = pd.DataFrame(
-        [
-            {"url": "https://aclanthology.org/P16-1035.pdf"},
-            {"url": "https://arxiv.org/pdf/2304.12730"},
-        ]
+st.session_state.download_df = pd.DataFrame(
+    [
+        {"url": "https://aclanthology.org/P16-1035.pdf"},
+        {"url": "https://arxiv.org/pdf/2304.12730"},
+    ]
+)
+
+input_type = get_papers.selectbox(
+    "Input type",
+    ("PDF", "URL"),
+    disabled=st.session_state.disable_btn,
+    label_visibility="collapsed",
+    index=1 if examples else 0,
+)
+
+with get_papers.form("file_form", border=False):
+    _ = """
+        change UI element for getting Research Papers
+    """
+    match input_type:
+        case "PDF":
+            upload_label = "Upload Research Papers"
+            st.info(upload_label)
+            upload_pdfs = st.file_uploader(
+                upload_label,
+                accept_multiple_files=True,
+                type="pdf",
+                label_visibility="collapsed",
+                disabled=st.session_state.disable_btn
+            )
+        case "URL":
+            st.info("Download Research Papers")
+
+            download_pdfs = st.data_editor(
+                st.session_state.download_df,
+                column_config={
+                    "url": st.column_config.LinkColumn(
+                        label="URL",
+                        width="medium",
+                        validate=r"^https://.+$",
+                        display_text=r"^https://.+?/([^/]+?)$",
+                    )
+                },
+                use_container_width=True,
+                num_rows="dynamic",
+            )["url"].to_list()
+
+            download_pdfs = py_.map_(download_pdfs, lambda pdf: (pdf or "").strip())
+
+    st.form_submit_button(
+        "Parse PDF",
+        disabled=st.session_state.disable_btn,
     )
-
-    input_type = st.selectbox(
-        "Input type",
-        ("PDF", "URL"),
-        disabled=st.session_state.disable_extract_btn,
-        label_visibility="collapsed",
-        index=1 if examples else 0,
-    )
-
-    with st.form("file_form", border=False):
-        _ = """
-            change UI element for getting Research Papers
-        """
-        match input_type:
-            case "PDF":
-                upload_label = "Upload Research Papers"
-                st.info(upload_label)
-                upload_pdfs = st.file_uploader(
-                    upload_label,
-                    accept_multiple_files=True,
-                    type="pdf",
-                    label_visibility="collapsed",
-                )
-            case "URL":
-                st.info("Download Research Papers")
-
-                download_pdfs = st.data_editor(
-                    st.session_state.download_df,
-                    column_config={
-                        "url": st.column_config.LinkColumn(
-                            label="URL",
-                            width="medium",
-                            validate=r"^https://.+$",
-                            display_text=r"^https://.+?/([^/]+?)$",
-                        )
-                    },
-                    use_container_width=True,
-                    num_rows="dynamic",
-                )["url"].to_list()
-
-                download_pdfs = py_.map_(download_pdfs, lambda pdf: (pdf or "").strip())
-
-        st.form_submit_button(
-            "Parse PDF",
-            disabled=st.session_state.disable_extract_btn,
-        )
 
 if "pdfs" in st.session_state:
     pdfs = py_.union(
@@ -251,41 +266,46 @@ if (
         index=[xml["id"] for xml in xmls],
     )
 
+    get_papers.update(state="complete", expanded=False)
 
-with st.expander("Step 2: Extract Datasets"):
-    with st.form("paper_select", border=False):
-        _ = """Use the Dataframe from earlier to show the table."""
-        event = st.dataframe(
-            st.session_state.papers_df,
-            column_config={
-                "title": st.column_config.TextColumn("Title"),
-                "status": st.column_config.TextColumn("🚥"),
-                "datasets": st.column_config.ListColumn("Datasets"),
-                "time_elapsed": st.column_config.NumberColumn("⏳", format="%.2fs"),
-                "download_link": st.column_config.LinkColumn(
-                    "📥",
-                    display_text="Review",
-                    help="Review the annotated PDF file with the dataset mentions highlighted"
-                ),
-            },
-            selection_mode="multi-row",
-            hide_index=True,
-            use_container_width=True,
-            on_select="rerun",
-        )
-        st.session_state.submitted = st.form_submit_button(
-            "Extract datasets", disabled=st.session_state.disable_extract_btn
-        )
+running_status = st.status("Step 2: Extract Datasets", expanded=True)
+with running_status.form("paper_select", border=False):
+    _ = """Use the Dataframe from earlier to show the table."""
+    event = st.dataframe(
+        st.session_state.papers_df,
+        column_config={
+            "title": st.column_config.TextColumn("Title"),
+            "status": st.column_config.TextColumn("🚥"),
+            "datasets": st.column_config.ListColumn("Datasets"),
+            "time_elapsed": st.column_config.NumberColumn("⏳", format="%.2fs"),
+            "download_link": st.column_config.LinkColumn(
+                "📥",
+                display_text="Review",
+                help="Review the annotated PDF file with the dataset mentions highlighted"
+            ),
+        },
+        selection_mode="multi-row",
+        hide_index=True,
+        use_container_width=True,
+        on_select="rerun",
+    )
+    st.session_state.submitted = st.form_submit_button(
+        "Extract datasets", disabled=st.session_state.disable_btn
+    )
 
 if st.session_state.submitted:
-    st.session_state.disable_extract_btn = True
+    st.session_state.disable_btn = True
     paper_ids = st.session_state.papers_df.index[event.selection.rows].to_list()
-    st.session_state.n_tasks = len(paper_ids)
+    st.session_state.total_tasks = len(paper_ids)
+    st.session_state.tasks_left = len(paper_ids)
+    st.session_state.tasks_left_prev = len(paper_ids)
 
     for paper_id in paper_ids:
         _ = """Put the tasks in a queue. And set the status of the task to pending."""
         st.session_state.task_list.put(paper_id)
         st.session_state.papers_df.at[paper_id, "status"] = "🟡"
+
+    running_status.update(state="running", expanded=True)
 
     st.rerun()
 
@@ -300,9 +320,9 @@ while True:
         However, if there are no task left the while True loop breaks.
         
     """
-    if st.session_state.n_tasks > 0:
+    if st.session_state.tasks_left > 0:
         result = st.session_state.done_list.get()
-        st.session_state.n_tasks -= 1
+        st.session_state.tasks_left -= 1
         st.session_state.papers_df.at[result["id"], "status"] = "🟢"
         st.session_state.papers_df.at[result["id"], "datasets"] = result["datasets"]
         st.session_state.papers_df.at[result["id"], "time_elapsed"] = result[
@@ -317,6 +337,16 @@ while True:
 
         st.session_state.done_list.task_done()
 
+        _ = """To update status to 🟢"""
         st.rerun()
     else:
+        _="""This block handles app behaviour on completion of all tasks or when no tasks is present."""
+        running_status.update(state="complete", expanded=True)
+        _="""Resest the counter."""
+        if st.session_state.tasks_left == 0:
+            if st.session_state.total_tasks > 0: 
+                # st.snow()
+                st.toast("Done 🎉")
+            st.session_state.total_tasks = 0
+            st.session_state.tasks_left_prev = 0
         break
