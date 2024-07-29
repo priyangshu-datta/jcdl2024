@@ -144,9 +144,9 @@ _ = """
 UI elements
 """
 
-st.warning(
-    "Avoid clicking anything, when at the top-right corner of the app shows ``RUNNING...``"
-)
+# st.warning(
+#     "Avoid clicking anything, when at the top-right corner of the app shows ``RUNNING...``"
+# )
 
 get_papers = st.status("Step 1: Get the Research Article", expanded=False if st.session_state.tasks_left > 0 else True, state="complete")
 examples = get_papers.button("Add examples", disabled=st.session_state.disable_btn)
