@@ -4,3 +4,7 @@ scratch*
 data
 **/__pycache__
 tmp
+.venv
+.ruff_cache
+.vscode
+.local
