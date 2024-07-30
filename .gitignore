@@ -4,3 +4,4 @@ scratch*
 data
 **/__pycache__
 tmp
+/.local

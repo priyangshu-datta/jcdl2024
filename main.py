@@ -153,12 +153,12 @@ examples = get_papers.button("Add examples", disabled=st.session_state.disable_b
 if examples:
     get_papers.update(expanded=False, state="running")
 
-st.session_state.download_df = pd.DataFrame(
-    [
-        {"url": "https://aclanthology.org/P16-1035.pdf"},
-        {"url": "https://arxiv.org/pdf/2304.12730"},
-    ]
-)
+    st.session_state.download_df = pd.DataFrame(
+        [
+            {"url": "https://aclanthology.org/P16-1035.pdf"},
+            {"url": "https://arxiv.org/pdf/2304.12730"},
+        ]
+    )
 
 input_type = get_papers.selectbox(
     "Input type",
