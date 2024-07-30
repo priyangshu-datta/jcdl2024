@@ -137,6 +137,9 @@ if abs(st.session_state.tasks_left_prev - st.session_state.tasks_left) > 0:
     st.session_state.tasks_left_prev = st.session_state.tasks_left
     st.toast(f"Done {st.session_state.total_tasks - st.session_state.tasks_left}/{st.session_state.total_tasks}.")
 
+if "download_df" not in st.session_state:
+    st.session_state.download_df = pd.DataFrame([{"url": None}])
+
 upload_pdfs = []
 download_pdfs: list[str] = []
 
