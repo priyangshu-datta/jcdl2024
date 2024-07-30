@@ -1,4 +1,4 @@
-# This is the RAG-DME method branch.
+# This is the LLM-DME method branch.
 
 1. Clone the repo.
 2. Use the extract_datasets function from the extract_datasets.py.
