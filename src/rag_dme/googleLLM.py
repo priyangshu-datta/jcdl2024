@@ -2,6 +2,9 @@ from time import sleep, time
 
 import google.ai.generativelanguage as glm
 
+from .goauth import GenerativeServiceClient
+
+
 def prepare_grounding_passages(docs: list[str]):
     contents = [glm.Content(parts=[glm.Part(text=doc)]) for doc in docs]
     passages = [
@@ -17,7 +20,7 @@ def prepare_query_content(user_query: str):
 
 
 def generate_answer(
-    gsc,
+    gsc: GenerativeServiceClient,
     grounding_passages: glm.GroundingPassages,
     query_content: glm.Content,
     temperature: float | None,

@@ -2,15 +2,15 @@ import re
 
 import pydash as py_
 
-from helper.googleLLM import LLM
-from helper.keywords_regexs import (
+from .googleLLM import LLM
+from .keywords_regexs import (
     inside_bracket_regex,
     intext_citation_regex_1,
     intext_citation_regex_2,
     prompt_LLM,
     reduce_sentence_space_keywords,
 )
-from helper.retreive_passages import prepare_passages
+from .retreive_passages import prepare_passages
 
 
 def extract_datasets(chromaDB, gsc, full_text: str):
@@ -21,11 +21,13 @@ def extract_datasets(chromaDB, gsc, full_text: str):
     if len(full_text) < 1:
         return list(datasets)
 
-    keywords = reduce_sentence_space_keywords
+    keywords = set(reduce_sentence_space_keywords)
     extra_prompt = ""
 
     while True:
-        passages = prepare_passages(chromaDB, full_text, keywords, regex=len(datasets) < 1)
+        passages = prepare_passages(
+            chromaDB, full_text, keywords, regex=len(datasets) < 1
+        )
         if len(passages) < 1:
             return list(datasets)
 

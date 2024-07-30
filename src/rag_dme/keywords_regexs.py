@@ -66,7 +66,7 @@ semantic_search_query = [
     "Datasets used as benchmarks",
     "Results of challenge",
     "Other datasets are",
-    "Another dataset is"
+    "Another dataset is",
 ]
 
 prompt_LLM = """Extract all named datasets used or mentioned in the provided passages from a research paper as it is.

@@ -2,8 +2,8 @@ import re
 
 import numpy as np
 import pydash as py_
-from helper.sentence_splitter import sentence_splitter
-from helper.keywords_regexs import semantic_search_query
+from .sentence_splitter import sentence_splitter
+from .keywords_regexs import semantic_search_query
 from sentence_transformers.util import semantic_search
 
 
@@ -11,7 +11,7 @@ def reduce_sentence_space(
     sentences: list[str], keywords: set[str], regex: bool = False
 ):
     if not regex:
-        keywords = [re.escape(keyword) for keyword in keywords]
+        keywords = set(re.escape(keyword) for keyword in keywords)
 
     def isSentenceUseful(sentence: str):
         return any(re.search(keyword, sentence, flags=re.I) for keyword in keywords)
@@ -66,7 +66,8 @@ def prepare_passages(chromaDB, full_text: str, keywords: set[str], regex: bool):
 
     sentence_embeds = np.array(chromaDB.prepare_embeddings(reduced_sentence_space))
     query_embeds = np.array(chromaDB.prepare_embeddings(semantic_search_query))
-    doc_hits = semantic_search(query_embeds, sentence_embeds)  # type: ignore
+    doc_hits = semantic_search(query_embeds, sentence_embeds, # type: ignore
+                               top_k=max(25, int(0.8*len(reduced_sentence_space))))  
     reduced_relevant_sentences = resolve_hit_documents(reduced_sentence_space, doc_hits)
 
     # passages = reduced_relevant_sentences
