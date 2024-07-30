@@ -5,10 +5,7 @@
 
 ```py
 from src.llm_dme import extract_datasets, GenerativeServiceClient
-from dotenv import load_dotenv
 
-
-load_dotenv()
 gsc = GenerativeServiceClient()
 
 print(extract_datasets(gsc=gsc, full_text=""))
