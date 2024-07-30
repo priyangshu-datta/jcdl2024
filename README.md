@@ -10,7 +10,7 @@ from pathlib import Path
 chromaDB = ChromaPersist(name="", path=Path(""))
 gsc = GenerativeServiceClient()
 
-extract_datasets(chromaDB=chromaDB, gsc=gsc, full_text="")
+print(extract_datasets(chromaDB=chromaDB, gsc=gsc, full_text=""))
 ```
 
 ## Dependencies
