@@ -66,7 +66,8 @@ def prepare_passages(chromaDB, full_text: str, keywords: set[str], regex: bool):
 
     sentence_embeds = np.array(chromaDB.prepare_embeddings(reduced_sentence_space))
     query_embeds = np.array(chromaDB.prepare_embeddings(semantic_search_query))
-    doc_hits = semantic_search(query_embeds, sentence_embeds)  # type: ignore
+    doc_hits = semantic_search(query_embeds, sentence_embeds, # type: ignore
+                               top_k=max(13, int(0.8*len(reduced_sentence_space))))  
     reduced_relevant_sentences = resolve_hit_documents(reduced_sentence_space, doc_hits)
 
     # passages = reduced_relevant_sentences
