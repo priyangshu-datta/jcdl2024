@@ -32,7 +32,7 @@ def extract_datasets(chromaDB, gsc, full_text: str):
         query = prompt_LLM + extra_prompt
 
         llm_answer: list[str] = []
-        for _docs in py_.chunk(passages, 10) if len(passages) > 15 else [passages]:
+        for _docs in py_.chunk(passages, 10) if len(passages) > 13 else [passages]:
             response = LLM.get_response(
                 gsc,
                 list(_docs),
